@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nesci — fuori dal quotidiano, un fiore</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --sabbia:#E7DED3;
+    --sabbia-2:#DCD0BE;
+    --verde:#1E2D28;
+    --verde-2:#33443D;
+    --terracotta:#8B2911;
+    --terracotta-soft:rgba(139,41,17,0.10);
+    --terracotta-on-dark:#D98564;
+    --tortora:#BE8376;
+    --blu:#5A6F7F;
+    --blu-polvere:#B2BECA;
+    --line: rgba(30,45,40,0.16);
+    --line-light: rgba(231,222,211,0.26);
+    --serif:'Cormorant Garamond', serif;
+    --sans:'Instrument Sans', sans-serif;
+    --type:'Cormorant Garamond', serif;
+    --ease-spring: cubic-bezier(.34,1.56,.64,1);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
+
+  body{
+    background:var(--sabbia);
+    color:var(--verde);
+    font-family:var(--sans);
+    line-height:1.6;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  body.splash-open{ overflow:hidden; height:100vh; }
+
+  a{color:inherit;}
+  img,svg{display:block; max-width:100%;}
+
+  :focus-visible{ outline:2px solid var(--terracotta); outline-offset:3px; }
+
+  .eyebrow{
+    font-family:var(--type);
+    font-size:16px;
+    letter-spacing:.05em;
+    text-transform:lowercase;
+    color:var(--terracotta);
+    opacity:1;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .eyebrow::before{
+    content:'✦';
+    font-family:var(--sans);
+    font-size:11px;
+    line-height:1;
+  }
+  .manifesto .eyebrow::before{ color:var(--sabbia); }
+
+  .cutout{ filter:drop-shadow(4px 8px 6px rgba(30,45,40,.32)); }
+
+  .texture-dots{
+    background-image:
+      radial-gradient(circle at 22% 28%, rgba(30,45,40,.06) 1px, transparent 1.4px),
+      radial-gradient(circle at 68% 64%, rgba(30,45,40,.05) 1px, transparent 1.4px);
+    background-size:13px 13px, 17px 17px;
+    background-color:var(--sabbia-2);
+  }
+
+  .paper-edge{ stroke:var(--sabbia); stroke-width:6; stroke-linejoin:round; paint-order:stroke fill; }
+
+  /* ---------- reveal on scroll ---------- */
+  .reveal{
+    opacity:0;
+    transform:translateY(26px);
+    transition:opacity .9s ease, transform .9s ease;
+    transition-delay:var(--delay,0s);
+  }
+  .reveal.in-view{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion: reduce){
+    .reveal{ opacity:1; transform:none; transition:none; }
+  }
+
+  /* ================= SPLASH ================= */
+  .splash{
+    position:fixed; inset:0; z-index:200;
+    background:var(--terracotta);
+    display:flex; align-items:center; justify-content:center;
+    transition:opacity .6s ease;
+  }
+  .splash.closing{ opacity:0; pointer-events:none; }
+  .splash.hidden{ display:none; }
+  .splash-logo{ width:min(260px, 58vw); cursor:pointer; }
+  .splash-logo svg path{ fill:var(--sabbia); stroke:var(--sabbia); }
+
+  /* ================= COMPONI ================= */
+  .builder{
+    background:var(--sabbia-2);
+    padding:70px 6%;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .builder-head{ text-align:center; max-width:480px; margin:0 auto 36px; }
+  .builder-head h2{ font-family:var(--serif); font-weight:600; font-size:clamp(26px,3.2vw,38px); margin:14px 0; }
+  .builder-head p{ font-size:14px; line-height:1.8; color:#3c4a44; }
+
+  .builder-stage{ position:relative; max-width:560px; height:380px; margin:0 auto; touch-action:pan-y; }
+  @media (max-width:640px){ .builder-stage{ height:420px; } }
+
+  .vase-wrap{
+    position:absolute; left:50%; bottom:2%; transform:translateX(-50%);
+    height:min(40vw,190px); width:auto; pointer-events:none; z-index:8;
+  }
+  .vase-wrap img{ height:100%; width:auto; }
+  .vase-dropzone{ position:absolute; left:50%; bottom:26%; transform:translateX(-50%); width:36%; height:24%; pointer-events:none; }
+
+  .stem{
+    position:absolute; height:min(28vw,140px); width:auto; cursor:grab; touch-action:none;
+    transition:left .45s cubic-bezier(.22,.61,.36,1), top .45s cubic-bezier(.22,.61,.36,1), transform .45s cubic-bezier(.22,.61,.36,1);
+    z-index:5; -webkit-user-select:none; user-select:none;
+  }
+  .stem img{ height:100%; width:auto; display:block; -webkit-touch-callout:none; pointer-events:none; }
+  .stem.dragging{ cursor:grabbing; transition:none; z-index:20; }
+
+  .builder-caption{
+    text-align:center; margin-top:26px; font-family:var(--type); font-size:13px;
+    color:var(--terracotta); opacity:0; transition:opacity .6s ease;
+  }
+  .builder-caption.show{ opacity:1; }
+
+  .builder-reset{
+    display:block; margin:34px auto 0; background:none; border:none;
+    font-family:var(--type); font-size:14px; text-decoration:underline; text-underline-offset:4px;
+    cursor:pointer; color:var(--verde);
+  }
+  .builder-reset:hover{ color:var(--terracotta); }
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky; top:0; z-index:40;
+    display:flex; justify-content:flex-end; align-items:center;
+    padding:18px 6%;
+    background:rgba(231,222,211,0.9);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid transparent;
+    transition:border-color .3s ease;
+  }
+  header.scrolled{ border-bottom-color:var(--line); }
+
+  .brand{
+    display:block; width:150px; text-decoration:none;
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  }
+  .brand svg path{ fill:var(--terracotta); stroke:var(--terracotta); }
+
+  /* menu toggle icon — the only other thing visible in the bar besides the logo */
+  .menu-toggle{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:42px; height:42px; padding:0; margin:0;
+    background:none; border:1px solid transparent; border-radius:50%;
+    cursor:pointer; color:var(--terracotta);
+  }
+  .menu-toggle svg{ width:22px; height:22px; }
+  .menu-toggle .icon-close{ display:none; }
+  header.nav-open .menu-toggle .icon-open{ display:none; }
+  header.nav-open .menu-toggle .icon-close{ display:block; }
+
+  /* nav becomes a dropdown panel: hidden by default, shown/hidden on toggle */
+  nav{
+    position:absolute; top:100%; left:0; right:0;
+    display:flex; flex-direction:column; align-items:center; gap:22px;
+    padding:26px 6% 32px;
+    background:rgba(231,222,211,0.98);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    opacity:0; visibility:hidden; transform:translateY(-8px);
+    transition:opacity .3s ease, transform .3s ease, visibility 0s linear .3s;
+  }
+  header.nav-open nav{
+    opacity:1; visibility:visible; transform:none;
+    transition:opacity .3s ease, transform .3s ease, visibility 0s linear 0s;
+  }
+  nav a{
+    font-family:var(--type); font-size:20px; letter-spacing:.02em; text-transform:lowercase;
+    text-decoration:none; position:relative; padding-bottom:2px;
+  }
+  nav a::after{
+    content:''; position:absolute; left:0; right:100%; bottom:0; height:1px; background:var(--terracotta);
+    transition:right .35s var(--ease-spring);
+  }
+  nav a:hover::after{ right:0; }
+
+  .lang-toggle{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--type); font-size:13px; letter-spacing:.02em; text-transform:uppercase;
+    background:none; border:1px solid var(--terracotta); border-radius:999px;
+    padding:6px 4px; cursor:pointer; color:var(--terracotta);
+  }
+  .lang-toggle span{
+    padding:3px 9px; border-radius:999px; transition:background .25s ease, color .25s ease;
+  }
+  .lang-toggle span.is-active{ background:var(--terracotta); color:var(--sabbia); }
+  @media (max-width:768px){ .lang-toggle{ font-size:12px; } }
+
+  /* ---------- hero ---------- */
+  .hero{
+    display:grid; grid-template-columns:1.05fr .95fr; gap:40px; align-items:center;
+    min-height:82vh; padding:40px 6% 60px;
+  }
+
+  .hero h1{
+    font-family:var(--serif); font-weight:600; font-size:clamp(48px, 7.4vw, 100px); line-height:1.03;
+    letter-spacing:-.005em; color:var(--verde); max-width:12ch;
+  }
+  .hero h1 em{ font-style:italic; color:var(--terracotta); }
+  .hero-break{ display:none; }
+
+  .hero p{ font-size:clamp(15px,1.2vw,17px); color:#3c4a44; max-width:42ch; margin:26px 0 36px; }
+
+  .hero-ctas{ display:flex; gap:16px; flex-wrap:wrap; }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; font-family:var(--sans); font-weight:700; font-size:13px;
+    letter-spacing:.03em; text-transform:lowercase; text-decoration:none; padding:15px 26px;
+    border-radius:999px; border:1px solid var(--terracotta);
+    transition:background .3s ease, color .3s ease, border-color .3s ease, transform .2s ease;
+  }
+  .btn-solid{ background:var(--terracotta); color:var(--sabbia); }
+  @media (hover:hover) and (pointer:fine){
+    .btn-solid:hover{ background:var(--verde); border-color:var(--verde); transform:translateY(-1px); }
+  }
+
+  .hero-illustration{ position:relative; width:100%; aspect-ratio:4/5; overflow:hidden; }
+  .hero-illustration > img,
+  .hero-illustration > video{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  /* editorial media placeholder — sostituire con foto o video */
+  .hero-media{
+    position:relative; width:100%; height:100%; overflow:hidden;
+    background-color:var(--sabbia-2);
+    background-image:
+      radial-gradient(circle at 24% 26%, rgba(30,45,40,.05) 1px, transparent 1.4px),
+      radial-gradient(circle at 70% 66%, rgba(30,45,40,.045) 1px, transparent 1.4px);
+    background-size:14px 14px, 18px 18px;
+    border:1px solid var(--line);
+    transition:transform .4s ease-out;
+    display:flex; align-items:center; justify-content:center;
+  }
+  /* crop-marks in terracotta */
+  .hero-media .crop{ position:absolute; width:18px; height:18px; pointer-events:none; }
+  .hero-media .crop.tl{ top:14px; left:14px; border-top:1.5px solid var(--terracotta); border-left:1.5px solid var(--terracotta); }
+  .hero-media .crop.tr{ top:14px; right:14px; border-top:1.5px solid var(--terracotta); border-right:1.5px solid var(--terracotta); }
+  .hero-media .crop.bl{ bottom:14px; left:14px; border-bottom:1.5px solid var(--terracotta); border-left:1.5px solid var(--terracotta); }
+  .hero-media .crop.br{ bottom:14px; right:14px; border-bottom:1.5px solid var(--terracotta); border-right:1.5px solid var(--terracotta); }
+
+  .hero-media-center{ display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .hero-media-play{
+    width:56px; height:56px; border-radius:50%;
+    border:1.5px solid var(--terracotta);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .hero-media-play svg{ width:18px; height:18px; margin-left:3px; fill:var(--terracotta); }
+  .hero-media-label{
+    font-family:var(--type); font-size:14px; letter-spacing:.06em;
+    text-transform:lowercase; color:var(--verde); opacity:.72;
+  }
+  .hero-media-tag{
+    position:absolute; top:22px; right:26px;
+    font-family:var(--type); font-size:10px; letter-spacing:.08em;
+    text-transform:lowercase; color:var(--terracotta); opacity:.8;
+  }
+
+  /* ---------- manifesto ---------- */
+  .manifesto{ background:var(--terracotta); color:var(--sabbia); padding:100px 6%; text-align:center; }
+  .manifesto .eyebrow{ color:var(--sabbia); opacity:.85; margin-bottom:20px; }
+  .manifesto h2{
+    font-family:var(--serif); font-weight:600; font-style:italic; font-size:clamp(32px,4.6vw,58px);
+    line-height:1.2; max-width:840px; margin:0 auto 26px;
+  }
+  .manifesto p{ font-size:16px; line-height:1.85; max-width:640px; margin:0 auto; opacity:.92; }
+
+  /* ---------- catalog (editorial index) ---------- */
+  .catalog{ padding:100px 6% 90px; }
+  .catalog-head{ max-width:560px; margin:0 auto 76px; text-align:center; }
+  .catalog-head h2{ font-family:var(--serif); font-weight:600; font-size:clamp(30px,3.8vw,46px); margin:16px 0 12px; }
+  .catalog-head p{ font-size:15px; line-height:1.8; color:#3c4a44; }
+
+  .plates-viewport{ max-width:1100px; margin:0 auto; position:relative; }
+  .plates{
+    display:flex; gap:44px; overflow-x:auto; scroll-snap-type:x mandatory;
+    padding:4px 4px 26px; margin:0 -4px;
+    scrollbar-width:thin; scrollbar-color:var(--terracotta) transparent;
+  }
+  .plates::-webkit-scrollbar{ height:5px; }
+  .plates::-webkit-scrollbar-thumb{ background:var(--terracotta); border-radius:3px; }
+  .plates::-webkit-scrollbar-track{ background:transparent; }
+
+  .plate{
+    display:flex; flex-direction:column; flex:0 0 auto;
+    width:min(74vw, 300px); scroll-snap-align:start;
+  }
+  @media (max-width:560px){ .plate{ width:78vw; } .plates{ gap:18px; } }
+
+  .carousel-nav{
+    display:flex; justify-content:center; gap:14px; margin-top:8px;
+  }
+  .carousel-btn{
+    width:38px; height:38px; border-radius:999px; border:1px solid var(--terracotta);
+    background:none; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:background .25s ease, transform .2s ease;
+  }
+  .carousel-btn svg{ width:14px; height:14px; fill:none; stroke:var(--terracotta); stroke-width:1.6; }
+  @media (hover:hover) and (pointer:fine){
+    .carousel-btn:hover{ background:var(--terracotta); transform:translateY(-1px); }
+    .carousel-btn:hover svg{ stroke:var(--sabbia); }
+  }
+  .carousel-btn:disabled{ opacity:.32; cursor:default; }
+  .carousel-btn:disabled:hover{ background:none; transform:none; }
+  .carousel-btn:disabled:hover svg{ stroke:var(--terracotta); }
+
+  .plate{ display:flex; flex-direction:column; }
+  .plate-frame{
+    position:relative; aspect-ratio:4/5; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    background-color:var(--sabbia-2);
+    background-image:
+      radial-gradient(circle at 24% 26%, rgba(30,45,40,.05) 1px, transparent 1.4px),
+      radial-gradient(circle at 70% 66%, rgba(30,45,40,.045) 1px, transparent 1.4px);
+    background-size:14px 14px, 18px 18px;
+    border:1px solid var(--line);
+  }
+  .plate-frame img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    transition:transform .6s var(--ease-spring);
+  }
+  .plate-frame svg{
+    max-width:70%; max-height:78%; width:auto; height:auto;
+    transition:transform .6s var(--ease-spring);
+  }
+  .plate:hover .plate-frame img,
+  .plate:hover .plate-frame svg,
+  .plate.is-focused .plate-frame img,
+  .plate.is-focused .plate-frame svg{ transform:scale(1.04); }
+
+  .plate-body{
+    margin-top:22px; padding-top:18px; border-top:1px solid var(--line);
+    display:grid; grid-template-columns:auto 1fr; column-gap:22px; row-gap:6px; align-items:baseline;
+  }
+  .plate-num{
+    font-family:var(--type); font-size:16px; letter-spacing:.06em; color:var(--terracotta);
+    position:relative; padding-bottom:4px;
+  }
+  .plate-num::after{
+    content:''; position:absolute; left:0; bottom:0; height:1px; width:0; background:var(--terracotta);
+    transition:width .4s var(--ease-spring);
+  }
+  .plate:hover .plate-num::after{ width:100%; }
+  .plate h3{
+    font-family:var(--serif); font-weight:600; font-size:22px; line-height:1.15; color:var(--verde);
+  }
+  .plate .blend{
+    grid-column:2 / -1; font-size:13.5px; line-height:1.6; color:#3c4a44; text-align:left;
+  }
+
+  /* ---------- drop / newsletter ---------- */
+  .drop{ background:var(--verde); color:var(--sabbia); padding:100px 6%; }
+  .drop-inner{ max-width:540px; margin:0 auto; text-align:center; }
+  .drop .eyebrow{ color:var(--terracotta-on-dark); opacity:1; }
+  .drop h2{ font-family:var(--serif); font-weight:600; font-size:clamp(30px,3.8vw,46px); margin:14px 0 16px; }
+  .drop p{ font-size:15px; line-height:1.8; opacity:.82; margin-bottom:38px; }
+
+  .newsletter-form{ display:flex; gap:12px; border-bottom:1px solid var(--line-light); padding-bottom:12px; transition:opacity .4s ease; }
+  .newsletter-form input{ flex:1; background:transparent; border:none; color:var(--sabbia); font-family:var(--sans); font-size:16px; padding:8px 0; }
+  .newsletter-form input::placeholder{ color:rgba(231,222,211,.5); }
+  .newsletter-form input:focus{ outline:none; }
+  .newsletter-form button{
+    background:none; border:none; color:var(--sabbia); font-family:var(--type); font-size:13px;
+    cursor:pointer; padding:0 4px; transition:transform .3s ease, color .3s ease;
+  }
+  .newsletter-form button:hover{ transform:translateX(4px); color:var(--tortora); }
+
+  .drop-success{ display:none; font-family:var(--type); font-size:13px; color:var(--tortora); padding:14px 0; }
+  .drop-success.show{ display:block; }
+
+  /* ---------- inspiration gallery ---------- */
+  .inspiration{ background:var(--sabbia); padding:100px 6%; }
+  .insp-head{ max-width:560px; margin:0 auto 56px; text-align:center; }
+  .insp-head h2{ font-family:var(--serif); font-weight:600; font-size:clamp(28px,3.4vw,42px); margin:14px 0 0; color:var(--verde); }
+
+  .insp-media{
+    position:relative; width:100%; max-width:380px; aspect-ratio:3/4;
+    margin:0 auto; overflow:hidden; border:1px solid var(--line);
+  }
+  .insp-img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    opacity:0; transition:opacity 1.6s ease;
+  }
+  .insp-img.is-active{ opacity:1; }
+  .insp-scrim{ position:absolute; inset:0; background:rgba(30,45,40,.34); }
+  .insp-text-wrap{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .insp-text{
+    position:absolute; opacity:0; transition:opacity 1.3s ease;
+    font-family:var(--serif); font-weight:600; font-style:italic; color:var(--sabbia);
+    font-size:clamp(26px,4vw,40px); line-height:1.3; text-align:center; max-width:19ch;
+    text-shadow:0 3px 16px rgba(0,0,0,.4);
+  }
+  .insp-text.is-active{ opacity:1; }
+
+  /* ---------- contact (minimal) ---------- */
+  .contact-simple .drop-inner{ max-width:460px; }
+  .email-copy{
+    background:none; border:1px solid var(--line-light); border-radius:999px;
+    color:var(--sabbia); font-family:var(--sans); font-weight:700; font-size:15px; letter-spacing:.01em;
+    padding:16px 28px; cursor:pointer; display:inline-flex; align-items:center; gap:12px; margin-top:6px;
+    transition:border-color .3s ease, transform .2s ease, background .3s ease;
+  }
+  .email-copy:hover{ border-color:var(--terracotta-on-dark); transform:translateY(-1px); }
+  .email-copy .copy-icon{ font-size:15px; opacity:.7; }
+  .copy-feedback{ display:none; font-family:var(--type); font-size:13px; color:var(--tortora); padding-top:18px; }
+  .copy-feedback.show{ display:block; }
+
+  @media (max-width:560px){
+    .insp-media{ max-width:300px; }
+  }
+
+  /* ---------- instagram ---------- */
+  .instagram{ padding:100px 6%; text-align:center; }
+  .instagram-head{ max-width:520px; margin:0 auto 46px; }
+  .instagram-head h2{ font-family:var(--serif); font-weight:600; font-size:clamp(28px,3.6vw,42px); margin:14px 0 12px; }
+  .instagram-head p{ font-size:15px; line-height:1.8; color:#3c4a44; margin-bottom:8px; }
+
+  .ig-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:4px; max-width:640px; margin:0 auto 40px; }
+  .ig-tile{
+    position:relative; aspect-ratio:1/1; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    background-image:
+      radial-gradient(circle at 30% 30%, rgba(30,45,40,.05) 1px, transparent 1.4px),
+      radial-gradient(circle at 70% 70%, rgba(30,45,40,.04) 1px, transparent 1.4px);
+    background-size:13px 13px, 17px 17px;
+    background-color:var(--sabbia-2);
+  }
+  .ig-tile:nth-child(3n+2){ background-color:#EFE7DA; }
+  .ig-tile:nth-child(3n){ background-color:var(--sabbia); }
+  .ig-tile svg{ width:32%; opacity:.4; }
+  .ig-tile img{ width:100%; height:100%; object-fit:cover; display:block; opacity:1; }
+  .ig-tile::after{ content:''; position:absolute; inset:0; background:transparent; transition:background .3s ease; }
+  .ig-tile:hover::after{ background:rgba(30,45,40,.07); }
+  .ig-tile .soon{
+    position:absolute; bottom:8px; right:10px;
+    font-family:var(--type); font-size:9px; letter-spacing:.02em;
+    color:var(--terracotta); opacity:.7;
+  }
+  @media (max-width:560px){ .ig-grid{ gap:3px; } }
+
+  /* ---------- footer ---------- */
+  footer{
+    padding:40px 6%; display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:12px; font-family:var(--type); font-size:16px; color:#5c6a63;
+  }
+
+  @media (max-width:768px){
+    .hero{ grid-template-columns:1fr; min-height:auto; padding-top:16px; }
+    .hero-illustration{
+      order:-1; max-width:none; width:100vw;
+      position:relative; left:50%; right:50%;
+      margin-left:-50vw; margin-right:-50vw; margin-bottom:20px;
+      aspect-ratio:auto; height:88vh;
+    }
+    header{ padding:14px 6%; }
+    .brand{ width:130px; }
+    .hero-break{ display:inline; }
+    .catalog{ padding-top:64px; }
+    .manifesto, .drop{ padding-top:64px; padding-bottom:64px; }
+    .inspiration, .instagram{ padding-top:64px; padding-bottom:64px; }
+  }
+</style>
+</head>
+<body class="splash-open">
+
+<!-- ============ SHARED ICON LIBRARY (illustrated vessels not yet photographed) ============ -->
+<svg style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
+<defs>
+  <symbol id="vesselBowl" viewBox="0 0 100 130">
+    <path class="paper-edge" fill="var(--verde)" d="M25 60 Q25 40 50 40 Q75 40 75 60 L70 95 Q50 105 30 95 Z"/>
+  </symbol>
+  <symbol id="vesselBottle" viewBox="0 0 100 130">
+    <path class="paper-edge" fill="var(--verde)" d="M40 30 L40 20 L60 20 L60 30 Q68 40 68 60 L68 100 L32 100 L32 60 Q32 40 40 30 Z"/>
+  </symbol>
+  <symbol id="vesselBrick" viewBox="0 0 100 130">
+    <rect class="paper-edge" fill="var(--verde)" x="22" y="55" width="56" height="40" rx="3"/>
+    <circle fill="var(--sabbia-2)" cx="38" cy="75" r="7"/>
+    <circle fill="var(--sabbia-2)" cx="62" cy="75" r="7"/>
+  </symbol>
+</defs>
+</svg>
+
+<!-- ============ SPLASH ============ -->
+<section class="splash" id="splash">
+  <div class="splash-logo">
+<svg viewBox="0 0 1952 607" xmlns="http://www.w3.org/2000/svg" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+      <g transform="matrix(1,0,0,1,-211.557342,-855.438895)">
+        <g transform="matrix(1,0,0,1,1187.286509,1158.563895)">
+          <g transform="matrix(1,0,0,1,-975.729167,-303.125)">
+            <clipPath id="_clip1s"><rect x="0" y="0" width="1951.458" height="606.25"/></clipPath>
+            <g clip-path="url(#_clip1s)">
+              <g transform="matrix(4.166667,0,0,4.166667,0,0)">
+                <g>
+                  <path d="M0,142.76C0.8,140.28 2.19,138.06 2.86,135.51C8.06,116.01 -0.37,96.11 9.21,75.47C22.58,46.66 69.41,29.63 94.8,51.58C122.03,75.12 95.39,119.81 120.44,137.74C121.55,138.54 126.05,140.63 126.23,140.91C127.39,142.8 123.84,142.9 122.62,143.09C104.07,145.99 84.38,141.41 82.47,119.63C80.84,101.04 86.79,80.06 73.63,63.98C60.89,48.42 34.01,49.26 25.88,68.86C18.44,86.78 27.52,106.91 30.09,125.07C30.92,130.92 31.42,136.85 31.29,142.76L0,142.76Z" style="fill-rule:nonzero;"/>
+                  <path d="M250.21,51.7C241.79,60.26 247.08,69.74 255.92,74.91C275.42,86.3 321.13,88.91 312.07,122.54C305.29,147.73 269.61,148.2 249.49,141.63C241.78,139.11 234.76,134.33 227.55,131.9C213.5,127.17 205.3,139.51 192.16,143.04C160.22,151.63 124.91,136.29 121.11,100.98C116.96,62.37 153.57,35.96 189.8,43.35C205.19,46.49 224.93,60.79 215.93,78.68C205.96,98.51 171.58,86.07 155.56,91.95C145.7,95.57 146.41,103.33 149.23,111.78C156.5,133.52 179.99,148.54 199.88,130.93C206.93,124.69 212.21,114.12 222.5,112.72C237.13,110.73 243.08,124.84 252.93,132.45C260.98,138.68 271.2,142.16 281.35,139.51C294.34,136.12 299.24,122.8 288.02,113.77C271.44,100.43 229.09,99.5 230.21,70.82C231.28,43.28 269.26,37.78 289.84,45.94C296.36,48.53 310.64,57.88 312.46,64.91C313.6,69.31 309.27,74.05 305.11,74.75C292.66,76.85 289.79,64.33 283.46,56.9C275.48,47.54 260.18,41.55 250.2,51.7L250.21,51.7ZM146.67,96.21C149.02,89.03 158.05,85.98 164.91,84.88C175.27,83.21 188.85,85.49 192.85,72.76C198.99,53.22 178.14,38.67 161.59,50.66C148.72,59.98 145.47,80.44 146.29,95.28C146.31,95.71 146.04,96.33 146.67,96.23L146.67,96.21Z" style="fill-rule:nonzero;"/>
+                  <path d="M372.09,42.52C386.23,41.96 410.06,48.63 415.57,63.29C419.42,73.52 406.85,78.74 399.13,73.63C395.01,70.9 393.12,61.86 390.26,57.32C383.35,46.34 369.88,45.45 360.16,53.48C341.02,69.32 340.85,108.43 359.19,125.02C373.75,138.19 395.01,135.62 408.8,122.73C410.21,121.41 415.55,114.55 416.05,114.32C419.67,112.64 416.41,119.59 415.87,120.65C398.12,155.57 342.74,152.56 325.41,118.74C307.39,83.57 333.75,44.05 372.08,42.53L372.09,42.52Z" style="fill-rule:nonzero;"/>
+                  <path d="M468.33,143.14C457.9,143.61 444.33,145.41 437.49,135.64C435.34,132.57 433.87,127.62 433.59,123.89C432.18,104.75 435.31,84.02 433.98,64.74C433.81,62.27 433.18,58.73 432.43,56.37C432.02,55.05 430.84,53.29 430.61,52.45C430.16,50.77 435.49,50.5 436.82,50.42C451.22,49.51 457.5,55.36 458.41,69.69C459.12,80.89 458.07,92.49 458,103.65C457.93,114.81 456.74,130.65 464.68,138.97C466.04,140.4 468.6,141.09 468.31,143.16L468.33,143.14Z" style="fill-rule:nonzero;"/>
+                  <g transform="matrix(0.194082,0,0,0.176087,322.293411,-15.96708)">
+                    <path d="M630.199,106.691C630.199,106.691 653.601,161.648 673.19,181.238C692.78,200.828 747.737,224.229 747.737,224.229C747.737,224.229 692.78,247.631 673.19,267.221C653.601,286.811 630.199,341.768 630.199,341.768C630.199,341.768 606.797,286.811 587.207,267.221C567.617,247.631 512.66,224.229 512.66,224.229C512.66,224.229 567.617,200.828 587.207,181.238C606.797,161.648 630.199,106.691 630.199,106.691Z" style="stroke-width:8.69px;"/>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<header id="siteHeader">
+  <a href="#top" class="brand" aria-label="nesci, home">
+    <svg viewBox="0 0 1952 607" xmlns="http://www.w3.org/2000/svg" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+      <g transform="matrix(1,0,0,1,-211.557342,-855.438895)">
+        <g transform="matrix(1,0,0,1,1187.286509,1158.563895)">
+          <g transform="matrix(1,0,0,1,-975.729167,-303.125)">
+            <clipPath id="_clip1h"><rect x="0" y="0" width="1951.458" height="606.25"/></clipPath>
+            <g clip-path="url(#_clip1h)">
+              <g transform="matrix(4.166667,0,0,4.166667,0,0)">
+                <g>
+                  <path d="M0,142.76C0.8,140.28 2.19,138.06 2.86,135.51C8.06,116.01 -0.37,96.11 9.21,75.47C22.58,46.66 69.41,29.63 94.8,51.58C122.03,75.12 95.39,119.81 120.44,137.74C121.55,138.54 126.05,140.63 126.23,140.91C127.39,142.8 123.84,142.9 122.62,143.09C104.07,145.99 84.38,141.41 82.47,119.63C80.84,101.04 86.79,80.06 73.63,63.98C60.89,48.42 34.01,49.26 25.88,68.86C18.44,86.78 27.52,106.91 30.09,125.07C30.92,130.92 31.42,136.85 31.29,142.76L0,142.76Z" style="fill-rule:nonzero;"/>
+                  <path d="M250.21,51.7C241.79,60.26 247.08,69.74 255.92,74.91C275.42,86.3 321.13,88.91 312.07,122.54C305.29,147.73 269.61,148.2 249.49,141.63C241.78,139.11 234.76,134.33 227.55,131.9C213.5,127.17 205.3,139.51 192.16,143.04C160.22,151.63 124.91,136.29 121.11,100.98C116.96,62.37 153.57,35.96 189.8,43.35C205.19,46.49 224.93,60.79 215.93,78.68C205.96,98.51 171.58,86.07 155.56,91.95C145.7,95.57 146.41,103.33 149.23,111.78C156.5,133.52 179.99,148.54 199.88,130.93C206.93,124.69 212.21,114.12 222.5,112.72C237.13,110.73 243.08,124.84 252.93,132.45C260.98,138.68 271.2,142.16 281.35,139.51C294.34,136.12 299.24,122.8 288.02,113.77C271.44,100.43 229.09,99.5 230.21,70.82C231.28,43.28 269.26,37.78 289.84,45.94C296.36,48.53 310.64,57.88 312.46,64.91C313.6,69.31 309.27,74.05 305.11,74.75C292.66,76.85 289.79,64.33 283.46,56.9C275.48,47.54 260.18,41.55 250.2,51.7L250.21,51.7ZM146.67,96.21C149.02,89.03 158.05,85.98 164.91,84.88C175.27,83.21 188.85,85.49 192.85,72.76C198.99,53.22 178.14,38.67 161.59,50.66C148.72,59.98 145.47,80.44 146.29,95.28C146.31,95.71 146.04,96.33 146.67,96.23L146.67,96.21Z" style="fill-rule:nonzero;"/>
+                  <path d="M372.09,42.52C386.23,41.96 410.06,48.63 415.57,63.29C419.42,73.52 406.85,78.74 399.13,73.63C395.01,70.9 393.12,61.86 390.26,57.32C383.35,46.34 369.88,45.45 360.16,53.48C341.02,69.32 340.85,108.43 359.19,125.02C373.75,138.19 395.01,135.62 408.8,122.73C410.21,121.41 415.55,114.55 416.05,114.32C419.67,112.64 416.41,119.59 415.87,120.65C398.12,155.57 342.74,152.56 325.41,118.74C307.39,83.57 333.75,44.05 372.08,42.53L372.09,42.52Z" style="fill-rule:nonzero;"/>
+                  <path d="M468.33,143.14C457.9,143.61 444.33,145.41 437.49,135.64C435.34,132.57 433.87,127.62 433.59,123.89C432.18,104.75 435.31,84.02 433.98,64.74C433.81,62.27 433.18,58.73 432.43,56.37C432.02,55.05 430.84,53.29 430.61,52.45C430.16,50.77 435.49,50.5 436.82,50.42C451.22,49.51 457.5,55.36 458.41,69.69C459.12,80.89 458.07,92.49 458,103.65C457.93,114.81 456.74,130.65 464.68,138.97C466.04,140.4 468.6,141.09 468.31,143.16L468.33,143.14Z" style="fill-rule:nonzero;"/>
+                  <g transform="matrix(0.194082,0,0,0.176087,322.293411,-15.96708)">
+                    <path d="M630.199,106.691C630.199,106.691 653.601,161.648 673.19,181.238C692.78,200.828 747.737,224.229 747.737,224.229C747.737,224.229 692.78,247.631 673.19,267.221C653.601,286.811 630.199,341.768 630.199,341.768C630.199,341.768 606.797,286.811 587.207,267.221C567.617,247.631 512.66,224.229 512.66,224.229C512.66,224.229 567.617,200.828 587.207,181.238C606.797,161.648 630.199,106.691 630.199,106.691Z" style="stroke-width:8.69px;"/>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+    </svg>
+  </a>
+  <button class="menu-toggle" id="menuToggle" type="button" aria-label="Apri il menu" aria-expanded="false" aria-controls="siteNav">
+    <svg class="icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
+    <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+  </button>
+  <nav id="siteNav">
+    <a href="#compositions" data-i18n="nav.compositions">composizioni</a>
+    <a href="#instagram">instagram</a>
+    <a href="#contact">contact</a>
+    <button class="lang-toggle" id="langToggle" type="button" aria-label="Cambia lingua / Change language">
+      <span data-lang-option="it" class="is-active">it</span>
+      <span data-lang-option="en">en</span>
+    </button>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-text">
+      <h1 data-i18n="hero.title">Fuori dal quotidiano,<br class="hero-break"> <em>un fiore</em>.</h1>
+      <p data-i18n="hero.text">Composizioni floreali che danno nuova vita a oggetti di tutti i giorni. Ogni incontro è unico, come la storia che porta con sé.</p>
+      <div class="hero-ctas">
+        <a href="#compositions" class="btn btn-solid" data-i18n="hero.cta">Scopri le composizioni</a>
+      </div>
+    </div>
+
+    <div class="hero-illustration">
+      <video autoplay muted loop playsinline preload="auto" aria-label="Composizioni nesci: video del tavolo di legno con i vasi" data-i18n-attr="aria-label:hero.videoLabel">
+        <source src="video/hero-video.mp4" type="video/mp4">
+      </video>
+    </div>
+
+  </section>
+
+  <!-- MANIFESTO -->
+  <section class="manifesto reveal" id="about-us">
+    <div class="eyebrow" data-i18n="manifesto.eyebrow">Manifesto</div>
+    <h2 data-i18n="manifesto.title">Una nuova prospettiva.</h2>
+    <p data-i18n="manifesto.text">In calabrese <em>nesci</em> significa esci.<br>Per noi significa guardare il mondo con occhi diversi, uscire dagli schemi.<br>Le composizioni nesci nascono da incontri inaspettati: un oggetto ritrovato, una selezione di fiori, che insieme acquistano un nuovo significato.</p>
+  </section>
+
+  <!-- CATALOGO -->
+  <section class="catalog" id="compositions">
+    <div class="catalog-head reveal">
+      <div class="eyebrow" data-i18n="catalog.eyebrow">Composizioni</div>
+      <h2 data-i18n="catalog.title">Ogni pezzo ha la sua storia</h2>
+      
+    </div>
+
+    <div class="plates-viewport">
+      <div class="plates" id="platesCarousel">
+      <article class="plate">
+        <div class="plate-frame"><img src="images/img-01.jpg" alt="In a Coffee Moka"></div>
+        <div class="plate-body">
+          <span class="plate-num">Nº 01</span>
+          <h3 data-i18n="plate.01.title">In una moka</h3>
+          <p class="blend" data-i18n="plate.01.blend">Eucalipto, fiori di riso, rafia</p>
+        </div>
+      </article>
+
+      <article class="plate">
+        <div class="plate-frame"><img src="images/img-02.jpg" alt="In a Terracotta Jug"></div>
+        <div class="plate-body">
+          <span class="plate-num">Nº 02</span>
+          <h3 data-i18n="plate.02.title">In una terracotta calabrese</h3>
+          <p class="blend" data-i18n="plate.02.blend">Peperoncini, spighe di grano, achillea</p>
+        </div>
+      </article>
+
+      <article class="plate">
+        <div class="plate-frame"><img src="images/img-03.jpg" alt="In a Silver Coupe"></div>
+        <div class="plate-body">
+          <span class="plate-num">Nº 03</span>
+          <h3 data-i18n="plate.03.title">In una coppa da gelato</h3>
+          <p class="blend" data-i18n="plate.03.blend">Muschio nordico, fiori di riso, eucalipto</p>
+        </div>
+      </article>
+
+      <article class="plate">
+        <div class="plate-frame"><img src="images/img-04.jpg" alt="In a Watering Can"></div>
+        <div class="plate-body">
+          <span class="plate-num">Nº 04</span>
+          <h3 data-i18n="plate.04.title">In un’oliera</h3>
+          <p class="blend" data-i18n="plate.04.blend">Statice, rafia</p>
+        </div>
+      </article>
+
+      <article class="plate">
+        <div class="plate-frame"><img src="images/img-05.jpg" alt="In Cut Glass"></div>
+        <div class="plate-body">
+          <span class="plate-num">Nº 05</span>
+          <h3 data-i18n="plate.05.title">In un vaso di seconda mano</h3>
+          <p class="blend">Hakea victoria</p>
+        </div>
+      </article>
+
+      <article class="plate">
+        <div class="plate-frame"><img src="images/img-06.jpg" alt="In a Weathered Brick"></div>
+        <div class="plate-body">
+          <span class="plate-num">Nº 06</span>
+          <h3 data-i18n="plate.06.title">In un mattone</h3>
+          <p class="blend" data-i18n="plate.06.blend">Statice, muschio nordico, limonium</p>
+        </div>
+      </article>
+
+      </div>
+      <div class="carousel-nav">
+        <button class="carousel-btn" id="platesPrev" type="button" aria-label="Composizione precedente" data-i18n-attr="aria-label:carousel.prev">
+          <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <button class="carousel-btn" id="platesNext" type="button" aria-label="Composizione successiva" data-i18n-attr="aria-label:carousel.next">
+          <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPONI -->
+  <section class="builder reveal" id="componi">
+    <div class="builder-head">
+      <div class="eyebrow" data-i18n="builder.eyebrow">componi tu</div>
+      <h2 data-i18n="builder.title">Crea la tua composizione.<br>Sposta i fiori.</h2>
+    </div>
+
+    <div class="builder-stage" id="builderStage">
+      <div class="vase-wrap cutout"><img src="images/img-07.png" alt="Moka da caffe" draggable="false"></div>
+      <div class="vase-dropzone" id="dropzone"></div>
+
+      <div class="stem cutout" id="stem1" tabindex="0" role="button" aria-label="Spiga di grano. Premi invio per posizionarla nel vaso." data-i18n-attr="aria-label:builder.stem1" style="left:6%; top:6%;">
+        <img src="images/img-08.png" alt="" draggable="false">
+      </div>
+      <div class="stem cutout" id="stem2" tabindex="0" role="button" aria-label="Achillea essiccata. Premi invio per posizionarla nel vaso." data-i18n-attr="aria-label:builder.stem2" style="right:4%; top:0%;">
+        <img src="images/img-09.png" alt="" draggable="false">
+      </div>
+      <div class="stem cutout" id="stem3" tabindex="0" role="button" aria-label="Ramo di eucalipto. Premi invio per posizionarlo nel vaso." data-i18n-attr="aria-label:builder.stem3" style="left:38%; top:-2%;">
+        <img src="images/img-10.png" alt="" draggable="false">
+      </div>
+    </div>
+
+    <button class="builder-reset" id="builderReset" type="button" data-i18n="builder.reset">ricomincia</button>
+  </section>
+
+  <!-- INSPIRATION -->
+  <section class="inspiration reveal" id="inspiration">
+    <div class="insp-head">
+      <div class="eyebrow" data-i18n="inspiration.eyebrow">Il processo</div>
+      <h2 data-i18n="inspiration.title">Come nasce una composizione.</h2>
+    </div>
+
+    <div class="insp-media">
+      <img class="insp-img is-active" data-i="0" src="images/img-11.jpg" alt="Bancarella di un mercatino con oggetti e vetri d'epoca">
+      <img class="insp-img" data-i="1" src="images/img-12.jpg" alt="Cassetta di legno piena di fiori e rami essiccati">
+      <img class="insp-img" data-i="2" src="images/img-13.jpg" alt="Mani che compongono un mazzo di fiori essiccati">
+      <div class="insp-scrim"></div>
+      <div class="insp-text-wrap">
+        <p class="insp-text is-active" data-i="0" data-i18n="inspiration.step1">Cerchiamo ispirazione intorno a noi</p>
+        <p class="insp-text" data-i="1" data-i18n="inspiration.step2">Scegliamo gli elementi</p>
+        <p class="insp-text" data-i="2" data-i18n="inspiration.step3">Ci lasciamo guidare dalla creatività</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="drop contact-simple" id="contact">
+    <div class="drop-inner reveal">
+      <div class="eyebrow" data-i18n="contact.eyebrow">Contatti</div>
+      <h2 data-i18n="contact.title">Vuoi saperne di più? Contattaci</h2>
+      <button class="email-copy" id="emailCopy" type="button" aria-label="Copia l'indirizzo email nescidesign.info@gmail.com" data-i18n-attr="aria-label:contact.emailLabel">
+        nescidesign.info@gmail.com
+        <span class="copy-icon">⧉</span>
+      </button>
+      <p class="copy-feedback" id="copyFeedback" data-i18n="contact.copied">Email copiata.</p>
+    </div>
+  </section>
+
+  <!-- INSTAGRAM -->
+  <section class="instagram reveal" id="instagram">
+    <div class="instagram-head">
+      <div class="eyebrow">Instagram</div>
+      <h2 data-i18n="instagram.title">Entra nel mondo di nesci</h2>
+      
+    </div>
+
+    <div class="ig-grid">
+      <div class="ig-tile"><img src="images/img-14.jpg" alt=""></div>
+      <div class="ig-tile"><img src="images/img-15.jpg" alt=""></div>
+      <div class="ig-tile"><img src="images/img-16.jpg" alt=""></div>
+      <div class="ig-tile"><img src="images/img-17.jpg" alt=""></div>
+      <div class="ig-tile"><img src="images/img-18.jpg" alt=""></div>
+      <div class="ig-tile"><img src="images/img-19.jpg" alt=""></div>
+    </div>
+
+    <a class="btn btn-solid" href="https://www.instagram.com/nesci_design/" target="_blank" rel="noopener noreferrer" data-i18n="instagram.cta">Segui su Instagram</a>
+  </section>
+
+</main>
+
+<footer>
+  <span>&copy; 2026 NESCI</span>
+  <span data-i18n="footer.tag">Fuori dal quotidiano, un fiore.</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var header = document.getElementById('siteHeader');
+  window.addEventListener('scroll', function(){
+    header.classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive:true });
+
+  /* dropdown menu: logo + icon stay visible, nav appears/disappears */
+  var menuToggle = document.getElementById('menuToggle');
+  var siteNav = document.getElementById('siteNav');
+  function closeNav(){
+    header.classList.remove('nav-open');
+    if(menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+  }
+  function openNav(){
+    header.classList.add('nav-open');
+    if(menuToggle) menuToggle.setAttribute('aria-expanded', 'true');
+  }
+  if(menuToggle && siteNav){
+    menuToggle.addEventListener('click', function(){
+      if(header.classList.contains('nav-open')) closeNav(); else openNav();
+    });
+    siteNav.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click', closeNav);
+    });
+    document.addEventListener('click', function(e){
+      if(!header.contains(e.target)) closeNav();
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape') closeNav();
+    });
+  }
+
+  var revealEls = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window && !reduceMotion){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold:0.15 });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('in-view'); });
+  }
+
+  var heroSection = document.querySelector('.hero');
+  var sway = document.getElementById('heroSway');
+  if(window.matchMedia('(hover: hover) and (pointer: fine)').matches && !reduceMotion){
+    heroSection.addEventListener('mousemove', function(e){
+      var rect = heroSection.getBoundingClientRect();
+      var relX = (e.clientX - rect.left) / rect.width - 0.5;
+      var relY = (e.clientY - rect.top) / rect.height - 0.5;
+      sway.style.transform = 'translate(' + (relX*10) + 'px,' + (relY*8) + 'px) rotate(' + (relX*1.5) + 'deg)';
+    });
+    heroSection.addEventListener('mouseleave', function(){
+      sway.style.transform = 'translate(0,0) rotate(0deg)';
+    });
+  }
+
+  function rectsOverlap(a,b){
+    return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+  }
+
+  /* ---------- splash: simple auto-dismiss intro ---------- */
+  var splash = document.getElementById('splash');
+
+  function closeSplash(){
+    if(!splash || splash.classList.contains('closing')) return;
+    splash.classList.add('closing');
+    var done = false;
+    function finish(){
+      if(done) return;
+      done = true;
+      splash.classList.add('hidden');
+      document.body.classList.remove('splash-open');
+    }
+    splash.addEventListener('transitionend', finish, { once:true });
+    setTimeout(finish, 700);
+  }
+  if(splash){
+    setTimeout(closeSplash, reduceMotion ? 200 : 1500);
+    splash.addEventListener('click', closeSplash);
+  }
+
+  /* ---------- componi: drag (or tap) three stems into the vase ---------- */
+  var stage = document.getElementById('builderStage');
+  var dropzone = document.getElementById('dropzone');
+  var stems = Array.prototype.slice.call(document.querySelectorAll('.stem'));
+  var caption = document.getElementById('builderCaption');
+  var resetBtn = document.getElementById('builderReset');
+
+  var slots = [
+    { x:-30, y:-8,  rot:-9 },
+    { x:0,   y:-28, rot:4  },
+    { x:28,  y:-4,  rot:11 }
+  ];
+
+  var origins = {};
+  stems.forEach(function(stem){
+    origins[stem.id] = { left: stem.style.left, top: stem.style.top };
+    stem.dataset.placed = "0";
+  });
+  var placedCount = 0;
+
+  function placeStem(stem){
+    if(stem.dataset.placed === "1") return;
+    var slot = slots[placedCount % slots.length];
+    var dz = dropzone.getBoundingClientRect();
+    var stageRect = stage.getBoundingClientRect();
+    var cx = (dz.left + dz.width/2) - stageRect.left;
+    var cy = (dz.top + dz.height/2) - stageRect.top;
+    var w = stem.offsetWidth, h = stem.offsetHeight;
+    stem.style.left = (cx + slot.x - w/2) + 'px';
+    stem.style.top = (cy + slot.y - h/2) + 'px';
+    stem.style.transform = 'rotate(' + slot.rot + 'deg)';
+    stem.classList.add('placed');
+    stem.dataset.placed = "1";
+    placedCount++;
+    if(caption && placedCount >= stems.length) caption.classList.add('show');
+  }
+
+  function returnStem(stem){
+    var o = origins[stem.id];
+    stem.style.left = o.left;
+    stem.style.top = o.top;
+    stem.style.transform = 'rotate(0deg)';
+  }
+
+  function resetAll(){
+    stems.forEach(function(stem){
+      stem.classList.remove('placed');
+      stem.dataset.placed = "0";
+      returnStem(stem);
+    });
+    placedCount = 0;
+    if(caption) caption.classList.remove('show');
+  }
+  if(resetBtn) resetBtn.addEventListener('click', resetAll);
+
+  stems.forEach(function(stem){
+    var dragging = false, moved = false, startX=0, startY=0, originLeft=0, originTop=0;
+    stem.style.touchAction = 'none';
+
+    function start(clientX, clientY){
+      dragging = true; moved = false;
+      stem.classList.add('dragging');
+      startX = clientX; startY = clientY;
+      var rect = stem.getBoundingClientRect();
+      var stageRect = stage.getBoundingClientRect();
+      originLeft = rect.left - stageRect.left;
+      originTop = rect.top - stageRect.top;
+      stem.style.left = originLeft + 'px';
+      stem.style.top = originTop + 'px';
+    }
+
+    function move(clientX, clientY){
+      if(!dragging) return;
+      var dx = clientX - startX;
+      var dy = clientY - startY;
+      if(Math.abs(dx) + Math.abs(dy) > 6) moved = true;
+      stem.style.left = (originLeft + dx) + 'px';
+      stem.style.top = (originTop + dy) + 'px';
+      if(!reduceMotion){
+        var rot = Math.max(-25, Math.min(25, dx * 0.15));
+        stem.style.transform = 'rotate(' + rot + 'deg)';
+      }
+    }
+
+    function toggleTap(){
+      if(stem.dataset.placed === "1"){
+        stem.classList.remove('placed');
+        stem.dataset.placed = "0";
+        placedCount = Math.max(0, placedCount - 1);
+        if(caption) caption.classList.remove('show');
+        returnStem(stem);
+      } else {
+        placeStem(stem);
+      }
+    }
+
+    function end(){
+      if(!dragging) return;
+      dragging = false;
+      stem.classList.remove('dragging');
+      if(!moved){
+        toggleTap();
+        return;
+      }
+      var stemRect = stem.getBoundingClientRect();
+      var dzRect = dropzone.getBoundingClientRect();
+      if(rectsOverlap(stemRect, dzRect)){
+        placeStem(stem);
+      } else {
+        returnStem(stem);
+      }
+    }
+
+    /* touch */
+    stem.addEventListener('touchstart', function(e){
+      var t = e.touches[0];
+      start(t.clientX, t.clientY);
+      e.preventDefault();
+    }, { passive:false });
+    stem.addEventListener('touchmove', function(e){
+      var t = e.touches[0];
+      move(t.clientX, t.clientY);
+      e.preventDefault();
+    }, { passive:false });
+    stem.addEventListener('touchend', function(e){ end(); });
+    stem.addEventListener('touchcancel', function(e){ end(); });
+
+    /* mouse */
+    stem.addEventListener('mousedown', function(e){
+      start(e.clientX, e.clientY);
+      e.preventDefault();
+      function mm(ev){ move(ev.clientX, ev.clientY); }
+      function mu(ev){
+        end();
+        document.removeEventListener('mousemove', mm);
+        document.removeEventListener('mouseup', mu);
+      }
+      document.addEventListener('mousemove', mm);
+      document.addEventListener('mouseup', mu);
+    });
+
+    /* keyboard */
+    stem.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        toggleTap();
+      }
+    });
+  });
+
+  /* ---------- catalog carousel ---------- */
+  var carousel = document.getElementById('platesCarousel');
+  var prevBtn = document.getElementById('platesPrev');
+  var nextBtn = document.getElementById('platesNext');
+  if(carousel && prevBtn && nextBtn){
+    function scrollAmount(){
+      var plate = carousel.querySelector('.plate');
+      return plate ? plate.getBoundingClientRect().width + 44 : 300;
+    }
+    function updateNav(){
+      var max = carousel.scrollWidth - carousel.clientWidth - 2;
+      prevBtn.disabled = carousel.scrollLeft <= 2;
+      nextBtn.disabled = carousel.scrollLeft >= max;
+    }
+    prevBtn.addEventListener('click', function(){
+      carousel.scrollBy({ left: -scrollAmount(), behavior: reduceMotion ? 'auto' : 'smooth' });
+    });
+    nextBtn.addEventListener('click', function(){
+      carousel.scrollBy({ left: scrollAmount(), behavior: reduceMotion ? 'auto' : 'smooth' });
+    });
+    carousel.addEventListener('scroll', updateNav, { passive:true });
+    window.addEventListener('resize', updateNav);
+    updateNav();
+
+    /* highlight the most-visible plate as you scroll/swipe, so the
+       zoom effect works on touch devices too, not just on hover */
+    if('IntersectionObserver' in window && !reduceMotion){
+      var plateEls = Array.prototype.slice.call(carousel.querySelectorAll('.plate'));
+      var plateRatios = new Map();
+      var plateObserver = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          plateRatios.set(entry.target, entry.intersectionRatio);
+        });
+        var bestEl = null, bestRatio = 0;
+        plateRatios.forEach(function(ratio, el){
+          if(ratio > bestRatio){ bestRatio = ratio; bestEl = el; }
+        });
+        plateEls.forEach(function(el){
+          el.classList.toggle('is-focused', el === bestEl && bestRatio > 0.6);
+        });
+      }, { root: carousel, threshold: [0, 0.25, 0.5, 0.6, 0.75, 0.9, 1] });
+      plateEls.forEach(function(el){ plateObserver.observe(el); });
+    }
+  }
+
+  /* inspiration gallery */
+  var inspImgs = document.querySelectorAll('.insp-img');
+  var inspTexts = document.querySelectorAll('.insp-text');
+  if(inspImgs.length){
+    var inspIndex = 0;
+    setInterval(function(){
+      inspImgs[inspIndex].classList.remove('is-active');
+      inspTexts[inspIndex].classList.remove('is-active');
+      inspIndex = (inspIndex + 1) % inspImgs.length;
+      inspImgs[inspIndex].classList.add('is-active');
+      inspTexts[inspIndex].classList.add('is-active');
+    }, 3200);
+  }
+
+  /* contact: copy email */
+  var emailBtn = document.getElementById('emailCopy');
+  var copyFeedback = document.getElementById('copyFeedback');
+  if(emailBtn){
+    emailBtn.addEventListener('click', function(){
+      var email = 'nescidesign.info@gmail.com';
+      function showFeedback(){
+        copyFeedback.classList.add('show');
+        setTimeout(function(){ copyFeedback.classList.remove('show'); }, 2200);
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(email).then(showFeedback).catch(showFeedback);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = email;
+        document.body.appendChild(ta);
+        ta.select();
+        try{ document.execCommand('copy'); }catch(e){}
+        document.body.removeChild(ta);
+        showFeedback();
+      }
+    });
+  }
+  /* ---------- language switch (IT / EN) ---------- */
+  var translations = {
+    "nav.compositions": { it:"composizioni", en:"compositions" },
+    "hero.title": {
+      it:'Fuori dal quotidiano,<br class="hero-break"> <em>un fiore</em>.',
+      en:'Out of the ordinary,<br class="hero-break"> <em>a flower</em>.'
+    },
+    "hero.text": {
+      it:"Composizioni floreali che danno nuova vita a oggetti di tutti i giorni. Ogni incontro è unico, come la storia che porta con sé.",
+      en:"Floral compositions that give new life to everyday objects. Every encounter is unique, just like the story it carries."
+    },
+    "hero.cta": { it:"Scopri le composizioni", en:"Discover the compositions" },
+    "hero.videoLabel": { it:"Composizioni nesci: video del tavolo di legno con i vasi", en:"Nesci compositions: video of the wooden table with the vases" },
+    "manifesto.eyebrow": { it:"Manifesto", en:"Manifesto" },
+    "manifesto.title": { it:"Una nuova prospettiva.", en:"A new perspective." },
+    "manifesto.text": {
+      it:"In calabrese <em>nesci</em> significa esci.<br>Per noi significa guardare il mondo con occhi diversi, uscire dagli schemi.<br>Le composizioni nesci nascono da incontri inaspettati: un oggetto ritrovato, una selezione di fiori, che insieme acquistano un nuovo significato.",
+      en:"In Calabrian dialect, <em>nesci</em> means \"it comes out\".<br>For us it means looking at the world with different eyes, stepping outside the lines.<br>Nesci compositions are born from unexpected encounters: a found object, a selection of flowers, which together take on a new meaning."
+    },
+    "catalog.eyebrow": { it:"Composizioni", en:"Compositions" },
+    "catalog.title": { it:"Ogni pezzo ha la sua storia", en:"Every piece has its own story" },
+    "plate.01.title": { it:"In una moka", en:"In a moka pot" },
+    "plate.01.blend": { it:"Eucalipto, fiori di riso, rafia", en:"Eucalyptus, rice flowers, raffia" },
+    "plate.02.title": { it:"In una terracotta calabrese", en:"In a Calabrian terracotta pot" },
+    "plate.02.blend": { it:"Peperoncini, spighe di grano, achillea", en:"Chili peppers, wheat ears, yarrow" },
+    "plate.03.title": { it:"In una coppa da gelato", en:"In an ice cream cup" },
+    "plate.03.blend": { it:"Muschio nordico, fiori di riso, eucalipto", en:"Nordic moss, rice flowers, eucalyptus" },
+    "plate.04.title": { it:"In un’oliera", en:"In an oil cruet" },
+    "plate.04.blend": { it:"Statice, rafia", en:"Statice, raffia" },
+    "plate.05.title": { it:"In un vaso di seconda mano", en:"In a second-hand vase" },
+    "plate.06.title": { it:"In un mattone", en:"In a brick" },
+    "plate.06.blend": { it:"Statice, muschio nordico, limonium", en:"Statice, Nordic moss, limonium" },
+    "carousel.prev": { it:"Composizione precedente", en:"Previous composition" },
+    "carousel.next": { it:"Composizione successiva", en:"Next composition" },
+    "builder.eyebrow": { it:"componi tu", en:"create your own" },
+    "builder.title": { it:"Crea la tua composizione.<br>Sposta i fiori.", en:"Create your composition.<br>Move the flowers." },
+    "builder.stem1": { it:"Spiga di grano. Premi invio per posizionarla nel vaso.", en:"Wheat ear. Press enter to place it in the vase." },
+    "builder.stem2": { it:"Achillea essiccata. Premi invio per posizionarla nel vaso.", en:"Dried yarrow. Press enter to place it in the vase." },
+    "builder.stem3": { it:"Ramo di eucalipto. Premi invio per posizionarlo nel vaso.", en:"Eucalyptus branch. Press enter to place it in the vase." },
+    "builder.reset": { it:"ricomincia", en:"start over" },
+    "inspiration.eyebrow": { it:"Il processo", en:"The process" },
+    "inspiration.title": { it:"Come nasce una composizione.", en:"How a composition comes to life." },
+    "inspiration.step1": { it:"Cerchiamo ispirazione intorno a noi", en:"We look for inspiration around us" },
+    "inspiration.step2": { it:"Scegliamo gli elementi", en:"We choose the elements" },
+    "inspiration.step3": { it:"Ci lasciamo guidare dalla creatività", en:"We let creativity guide us" },
+    "contact.eyebrow": { it:"Contatti", en:"Contact" },
+    "contact.title": { it:"Vuoi saperne di più? Contattaci", en:"Want to know more? Get in touch" },
+    "contact.emailLabel": { it:"Copia l'indirizzo email nescidesign.info@gmail.com", en:"Copy the email address nescidesign.info@gmail.com" },
+    "contact.copied": { it:"Email copiata.", en:"Email copied." },
+    "instagram.title": { it:"Entra nel mondo di nesci", en:"Step into the world of nesci" },
+    "instagram.soon": { it:"presto", en:"soon" },
+    "instagram.cta": { it:"Segui su Instagram", en:"Follow on Instagram" },
+    "footer.tag": { it:"Fuori dal quotidiano, un fiore.", en:"Out of the ordinary, a flower." }
+  };
+
+  var pageTitles = {
+    it:"nesci — fuori dal quotidiano, un fiore",
+    en:"nesci — out of the ordinary, a flower"
+  };
+
+  var i18nEls = document.querySelectorAll('[data-i18n]');
+  var i18nAttrEls = document.querySelectorAll('[data-i18n-attr]');
+  var langToggle = document.getElementById('langToggle');
+
+  function setLanguage(lang){
+    i18nEls.forEach(function(el){
+      var key = el.getAttribute('data-i18n');
+      var entry = translations[key];
+      if(entry) el.innerHTML = entry[lang];
+    });
+    i18nAttrEls.forEach(function(el){
+      var parts = el.getAttribute('data-i18n-attr').split(':');
+      var attrName = parts[0], key = parts[1];
+      var entry = translations[key];
+      if(entry) el.setAttribute(attrName, entry[lang]);
+    });
+    if(langToggle){
+      langToggle.querySelectorAll('[data-lang-option]').forEach(function(span){
+        span.classList.toggle('is-active', span.getAttribute('data-lang-option') === lang);
+      });
+    }
+    document.documentElement.lang = lang;
+    if(pageTitles[lang]) document.title = pageTitles[lang];
+    try{ localStorage.setItem('nesciLang', lang); }catch(e){}
+  }
+
+  if(langToggle){
+    langToggle.addEventListener('click', function(){
+      var current = document.documentElement.lang === 'en' ? 'en' : 'it';
+      setLanguage(current === 'it' ? 'en' : 'it');
+    });
+  }
+
+  var savedLang = 'it';
+  try{ savedLang = localStorage.getItem('nesciLang') || 'it'; }catch(e){}
+  if(savedLang === 'en') setLanguage('en');
+})();
+</script>
+
+</body>
+</html>
